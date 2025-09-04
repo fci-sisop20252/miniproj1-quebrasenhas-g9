@@ -88,18 +88,18 @@ int main(int argc, char *argv[]) {
     // - num_workers deve estar entre 1 e MAX_WORKERS
     // - charset não pode ser vazio
 
-    if (pasword_len < 1 || pasword_len > 10) {
-        fprintf("Erro!! O tamanho da senha deve ser entre 1 e 10 caracteres!!\n");
+    if (password_len < 1 || password_len > 10) {
+        fprintf(stderr, "Erro!! O tamanho da senha deve ser entre 1 e 10 caracteres!!\n");
         exit(1);
     }
 
     if (num_workers < 1 || num_workers > MAX_WORKERS) {
-        fprintf("Erro!! O número de trabalhadores deve ser entre 1 e %d trabalhadores!\n" + MAX_WORKERS);
+        fprintf(stderr, "Erro!! O número de trabalhadores deve ser entre 1 e %d trabalhadores!\n" , MAX_WORKERS);
         exit(1);
     }
 
-    if (charset != null) {
-        fprintf("Erro!! Charset não pode ser vazio!\n");
+    if (charset == NULL || strlen(charset) == 0) {
+        fprintf(stderr, "Erro!! Charset não pode ser vazio!\n");
         exit(1);
     }
     
@@ -126,11 +126,11 @@ int main(int argc, char *argv[]) {
     // DICA: Use divisão inteira e distribua o resto entre os primeiros workers
 
     // IMPLEMENTE AQUI:
-    long long passwords_per_worker = total_space / total_workers;
-    long long remaining = total_space % total_workers;
+    long long passwords_per_worker = total_space / num_workers;
+    long long remaining = total_space % num_workers;
 
 
-    fprintf("Cada trabalhador processará aproximadamente %lld senhas!\n" + pasword_per_worker);]
+    printf("Cada trabalhador processará aproximadamente %lld senhas!\n" , passwords_per_worker);
     if (remaining > 0) {
         printf("%lld workers processarão uma senha extra.\n", remaining);
     }
@@ -144,14 +144,14 @@ int main(int argc, char *argv[]) {
     
     // IMPLEMENTE AQUI: Loop para criar workers
 
-    long long start_index;
+    long long start_index = 0;
 
-    long long count = paswords_per_worker;
 
     for (int i = 0; i < num_workers; i++) {
         // TODO: Calcular intervalo de senhas para este worker
+        long long count = passwords_per_worker;
         if (i < remaining) {
-            count += 1; // Distribuir o resto
+            count ++; // Distribuir o resto
         }
 
         long long end_index = start_index + (count - 1);
@@ -171,8 +171,10 @@ int main(int argc, char *argv[]) {
             exit(1);
         } else if (pid == 0) {
             char worker_id[10];
-            sprintf(workerid + "%d" + i);
-            execl("./worker", "worker", target_hash, start_password, end_password, charset, worker_id, (char *)NULL);
+            sprintf(worker_id, "%d", i);
+            char len_str[10];
+            sprintf(len_str, "%d", password_len);
+            execl("./worker", "worker", target_hash, start_password, end_password, charset, len_str, worker_id, (char *)NULL);
             // Caso falhe
             perror("Erro ao executar worker");
             exit(1);
@@ -194,6 +196,21 @@ int main(int argc, char *argv[]) {
     // - Identificar qual worker terminou
     // - Verificar se terminou normalmente ou com erro
     // - Contar quantos workers terminaram
+
+    int status;
+    int finished = 0;
+    pid_t pid;
+
+    while ((pid = wait(&status)) > 0) {
+        finished++;
+        if (WIFEXITED(status)) {
+            printf("Worker PID=%d terminou com código %d\n", pid, WEXITSTATUS(status));
+        } else if (WIFSIGNALED(status)) {
+            printf("Worker PID=%d terminou por sinal %d\n", pid, WTERMSIG(status));
+        }
+    }
+
+    printf("Total de workers finalizados: %d\n", finished);
     
     // Registrar tempo de fim
     time_t end_time = time(NULL);
@@ -214,5 +231,22 @@ int main(int argc, char *argv[]) {
     // Estatísticas finais (opcional)
     // TODO: Calcular e exibir estatísticas de performance
     
+     FILE *f = fopen(RESULT_FILE, "r");
+    if (f) {
+        int worker_id;
+        char password[11];
+        if (fscanf(f, "%d:%10s", &worker_id, password) == 2) {
+            char verify_hash[33];
+            md5_string(password, verify_hash);
+            if (strcmp(verify_hash, target_hash) == 0) {
+                printf("Senha encontrada pelo worker %d: %s\n", worker_id, password);
+            } else {
+                printf("Arquivo de resultado encontrado, mas hash não confere!\n");
+            }
+        }
+        fclose(f);
+    } else {
+        printf("Nenhum worker encontrou a senha.\n");
+    }
     return 0;
 }
