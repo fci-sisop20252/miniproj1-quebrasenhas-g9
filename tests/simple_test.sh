@@ -170,7 +170,7 @@ run_test "Senha Numérica (123)" \
 
 # Teste 3: Senha no final do espaço
 run_test "Senha no Final (zzz)" \
-    "15de21c670ae7c3f6f3f1f37029303c9" \
+    "f3abb86bd34cf4d52698f14c0da1dc60" \
     "3" \
     "xyz" \
     "3" \
