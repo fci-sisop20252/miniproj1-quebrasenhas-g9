@@ -62,7 +62,6 @@ void index_to_password(long long index, const char *charset, int charset_len,
  * Função principal do coordenador
  */
 int main(int argc, char *argv[]) {
-    // TODO 1: Validar argumentos de entrada
     // Verificar se argc == 5 (programa + 4 argumentos)
     // Se não, imprimir mensagem de uso e sair com código 1
     
@@ -74,7 +73,6 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    // TODO 1 FEITO!
     
     // Parsing dos argumentos (após validação)
     const char *target_hash = argv[1];
@@ -83,7 +81,6 @@ int main(int argc, char *argv[]) {
     int num_workers = atoi(argv[4]);
     int charset_len = strlen(charset);
     
-    // TODO: Adicionar validações dos parâmetros
     // - password_len deve estar entre 1 e 10
     // - num_workers deve estar entre 1 e MAX_WORKERS
     // - charset não pode ser vazio
@@ -103,7 +100,6 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     
-    // TODO (acidionar validação dos parâmentros) FEITO!
     
     printf("=== Mini-Projeto 1: Quebra de Senhas Paralelo ===\n");
     printf("Hash MD5 alvo: %s\n", target_hash);
@@ -121,7 +117,6 @@ int main(int argc, char *argv[]) {
     // Registrar tempo de início
     time_t start_time = time(NULL);
     
-    // TODO 2: Dividir o espaço de busca entre os workers
     // Calcular quantas senhas cada worker deve verificar
     // DICA: Use divisão inteira e distribua o resto entre os primeiros workers
 
@@ -139,32 +134,24 @@ int main(int argc, char *argv[]) {
     // Arrays para armazenar PIDs dos workers
     pid_t workers[MAX_WORKERS];
     
-    // TODO 3: Criar os processos workers usando fork()
     printf("Iniciando workers...\n");
     
-    // IMPLEMENTE AQUI: Loop para criar workers
 
     long long start_index = 0;
 
 
     for (int i = 0; i < num_workers; i++) {
-        // TODO: Calcular intervalo de senhas para este worker
         long long count = passwords_per_worker;
         if (i < remaining) {
             count ++; // Distribuir o resto
         }
 
         long long end_index = start_index + (count - 1);
-        // TODO: Converter indices para senhas de inicio e fim
         char start_password[password_len + 1];
         char end_password[password_len + 1];
         index_to_password(start_index, charset, charset_len, password_len, start_password);
         index_to_password(end_index, charset, charset_len, password_len, end_password);
 
-        // TODO 4: Usar fork() para criar processo filho
-        // TODO 5: No processo pai: armazenar PID
-        // TODO 6: No processo filho: usar execl() para executar worker
-        // TODO 7: Tratar erros de fork() e execl()
         pid_t pid = fork();
         if (pid < 0) {
             perror("Erro ao criar worker");
@@ -187,7 +174,6 @@ int main(int argc, char *argv[]) {
     
     printf("\nTodos os workers foram iniciados. Aguardando conclusão...\n");
     
-    // TODO 8: Aguardar todos os workers terminarem usando wait()
     // IMPORTANTE: O pai deve aguardar TODOS os filhos para evitar zumbis
     
     // IMPLEMENTE AQUI:
@@ -200,7 +186,7 @@ int main(int argc, char *argv[]) {
     int status;
     int finished = 0;
     pid_t pid;
-
+    
     while ((pid = wait(&status)) > 0) {
         finished++;
         if (WIFEXITED(status)) {
@@ -218,7 +204,6 @@ int main(int argc, char *argv[]) {
     
     printf("\n=== Resultado ===\n");
     
-    // TODO 9: Verificar se algum worker encontrou a senha
     // Ler o arquivo password_found.txt se existir
     
     // IMPLEMENTE AQUI:
@@ -229,7 +214,6 @@ int main(int argc, char *argv[]) {
     // - Exibir resultado encontrado
     
     // Estatísticas finais (opcional)
-    // TODO: Calcular e exibir estatísticas de performance
     
      FILE *f = fopen(RESULT_FILE, "r");
     if (f) {
